@@ -5,6 +5,13 @@ edition = "2024"
 
 [dependencies]
 argh = { version = "0.1.19", default-features = false, features = ["help"] }
-compio = { version = "0.19.0", default-features = false, features = ["runtime", "macros", "io", "fs"] }
+compio = { version = "0.19.0", default-features = false, features = [
+    "runtime",
+    "macros",
+    "io",
+    "fs",
+    "io-uring",
+    "polling",
+] }
 hex-simd = "0.8.0"
 ring = "0.17.14"
