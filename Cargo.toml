@@ -1,3 +1,5 @@
+cargo-features = ["panic-immediate-abort"]
+
 [package]
 name = "fasthash"
 version = "0.1.0"
@@ -7,3 +9,10 @@ edition = "2024"
 argh = { version = "0.1.19", default-features = false, features = ["help"] }
 hex-simd = "0.8.0"
 ring = "0.17.14"
+
+[profile.release]
+lto = true
+strip = true
+panic = "immediate-abort"
+opt-level = 3
+codegen-units = 1
