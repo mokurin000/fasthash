@@ -77,7 +77,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .read(true)
             .custom_flags(if cfg!(windows) {
                 // magic: Sequential Scan, potentianlly increasing seq read performance
-                134217728u32
+                1 << 27
             } else {
                 0
             })
