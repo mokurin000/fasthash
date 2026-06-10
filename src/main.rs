@@ -5,10 +5,10 @@ use std::path::PathBuf;
 
 use argh::FromArgs;
 use compio::BufResult;
-use compio::fs::File;
-use compio::io::AsyncReadAtExt;
+use compio::fs::OpenOptions;
+use compio::io::AsyncReadAt;
 use hex_simd::AsciiCase;
-use ring::digest;
+use ring::digest::{self, Context};
 
 #[derive(Debug, Clone, Copy)]
 enum HashAlgorithm {
@@ -73,23 +73,51 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     for path in args.files {
-        let Ok(file) = File::open(&path).await.inspect_err(|e| {
-            eprintln!("Failed to open {path:?}: {e}");
-        }) else {
+        let Ok(file) = OpenOptions::new()
+            .read(true)
+            .custom_flags(if cfg!(windows) {
+                // magic: Sequential Scan, potentianlly increasing seq read performance
+                134217728u32
+            } else {
+                0
+            })
+            .open(&path)
+            .await
+            .inspect_err(|e| {
+                eprintln!("Failed to open {path:?}: {e}");
+            })
+        else {
             continue;
         };
 
-        let BufResult(result, data) = file
-            .read_to_end_at(Vec::with_capacity(file.metadata().await?.len() as usize), 0)
-            .await;
+        let mut ctx = Context::new(alg);
+        let mut pos = 0;
+        let mut buffer = Vec::with_capacity(0x40000); // 256 KiB
 
-        if let Err(e) = result {
-            eprintln!("Failed to read {path:?}: {e}");
-            continue;
+        let file_read_result = loop {
+            match file.read_at(buffer, pos).await {
+                BufResult(Ok(0), _) => {
+                    break Ok(());
+                }
+                BufResult(Ok(len), mut buf) => {
+                    ctx.update(&buf);
+                    buf.clear();
+
+                    pos += len as u64;
+                    buffer = buf;
+                }
+                BufResult(Err(e), _) => {
+                    break Err(e);
+                }
+            }
+        };
+
+        if let Err(e) = file_read_result {
+            eprintln!("Failed reading {path:?}: {e}");
+            break;
         }
 
-        let digest = ring::digest::digest(alg, &data);
-        let hex = hex_simd::encode_to_string(&digest, AsciiCase::Lower);
+        let hex = hex_simd::encode_to_string(ctx.finish(), AsciiCase::Lower);
 
         println!(
             "{hex} {}",
