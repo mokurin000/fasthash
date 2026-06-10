@@ -1,12 +1,15 @@
+#![feature(core_io_borrowed_buf)]
+#![feature(read_buf)]
+
 use std::borrow::Cow;
 use std::error::Error;
 use std::ffi::OsStr;
+use std::fs::OpenOptions;
+use std::io::{BorrowedBuf, Read};
+use std::os::windows::fs::OpenOptionsExt as _;
 use std::path::PathBuf;
 
 use argh::FromArgs;
-use compio::BufResult;
-use compio::fs::OpenOptions;
-use compio::io::AsyncReadAt;
 use hex_simd::AsciiCase;
 use ring::digest::{self, Context};
 
@@ -59,8 +62,7 @@ struct Args {
     files: Vec<PathBuf>,
 }
 
-#[compio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = argh::from_env();
 
     let alg = args.algorithm.as_ring();
@@ -73,7 +75,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     for path in args.files {
-        let Ok(file) = OpenOptions::new()
+        let Ok(mut file) = OpenOptions::new()
             .read(true)
             .custom_flags(if cfg!(windows) {
                 // magic: Sequential Scan, potentianlly increasing seq read performance
@@ -82,7 +84,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 0
             })
             .open(&path)
-            .await
             .inspect_err(|e| {
                 eprintln!("Failed to open {path:?}: {e}");
             })
@@ -91,25 +92,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
         };
 
         let mut ctx = Context::new(alg);
-        let mut pos = 0;
         let mut buffer = Vec::with_capacity(0x1000000); // 16 MiB
 
-        let file_read_result = loop {
-            match file.read_at(buffer, pos).await {
-                BufResult(Ok(0), _) => {
-                    break Ok(());
-                }
-                BufResult(Ok(len), mut buf) => {
-                    ctx.update(&buf);
-                    buf.clear();
+        let mut cursor = BorrowedBuf::from(buffer.spare_capacity_mut());
 
-                    pos += len as u64;
-                    buffer = buf;
-                }
-                BufResult(Err(e), _) => {
-                    break Err(e);
-                }
+        let file_read_result = loop {
+            if let Err(e) = file.read_buf(cursor.unfilled()) {
+                break Err(e);
             }
+            if cursor.len() == 0 {
+                break Ok(());
+            }
+
+            ctx.update(cursor.filled());
+            cursor.clear();
         };
 
         if let Err(e) = file_read_result {
