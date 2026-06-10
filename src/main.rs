@@ -92,7 +92,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         let mut ctx = Context::new(alg);
         let mut pos = 0;
-        let mut buffer = Vec::with_capacity(0x40000); // 256 KiB
+        let mut buffer = Vec::with_capacity(0x1000000); // 16 MiB
 
         let file_read_result = loop {
             match file.read_at(buffer, pos).await {
