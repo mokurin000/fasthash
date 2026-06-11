@@ -6,87 +6,16 @@ use std::error::Error;
 use std::ffi::OsStr;
 use std::fs::OpenOptions;
 use std::io::{BorrowedBuf, Read};
+
+#[cfg(windows)]
 use std::os::windows::fs::OpenOptionsExt as _;
-use std::path::PathBuf;
 
 use argh::FromArgs;
-use digest::{Digest as _, DynDigest};
 use hex_simd::AsciiCase;
-use sha2::{Sha224, Sha256, Sha384, Sha512, Sha512_224, Sha512_256};
-use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 
-#[derive(Debug, Clone, Copy)]
-enum HashAlgorithm {
-    Sha224,
-    Sha256,
-    Sha384,
-    Sha512,
-    Sha512_224,
-    Sha512_256,
-    Sha3_224,
-    Sha3_256,
-    Sha3_384,
-    Sha3_512,
-}
+use crate::args::Args;
 
-impl HashAlgorithm {
-    pub fn as_algo(self) -> Box<dyn DynDigest> {
-        let algo: &dyn DynDigest = match self {
-            Self::Sha224 => &Sha224::new(),
-            Self::Sha256 => &Sha256::new(),
-            Self::Sha384 => &Sha384::new(),
-            Self::Sha512 => &Sha512::new(),
-            Self::Sha512_224 => &Sha512_224::new(),
-            Self::Sha512_256 => &Sha512_256::new(),
-            Self::Sha3_224 => &Sha3_224::new(),
-            Self::Sha3_256 => &Sha3_256::new(),
-            Self::Sha3_384 => &Sha3_384::new(),
-            Self::Sha3_512 => &Sha3_512::new(),
-        };
-        algo.box_clone()
-    }
-}
-
-impl argh::FromArgValue for HashAlgorithm {
-    fn from_arg_value(value: &str) -> Result<Self, String> {
-        match value {
-            "sha224" => Ok(Self::Sha224),
-            "sha256" => Ok(Self::Sha256),
-            "sha384" => Ok(Self::Sha384),
-            "sha512" => Ok(Self::Sha512),
-            "sha512-224" => Ok(Self::Sha512_224),
-            "sha512-256" => Ok(Self::Sha512_256),
-            "sha3-224" => Ok(Self::Sha3_224),
-            "sha3-256" => Ok(Self::Sha3_256),
-            "sha3-384" => Ok(Self::Sha3_384),
-            "sha3-512" => Ok(Self::Sha3_512),
-            _ => Err(format!(
-                "unknown hash algorithm: {value}
-expected: sha224, sha256, sha384, sha512, sha512-224, sha512-256, sha3-224, sha3-256, sha3-384, sha3-512"
-            )),
-        }
-    }
-}
-
-fn parse_size(s: &str) -> Result<u64, String> {
-    parse_size::parse_size(s).map_err(|e| e.to_string())
-}
-
-#[derive(FromArgs)]
-/// Calculate file hashes.
-struct Args {
-    /// buffer size, default: 32KiB
-    #[argh(option, from_str_fn(parse_size), default = "32*1024")]
-    buf_size: u64,
-
-    /// hash algorithm
-    #[argh(positional)]
-    algorithm: HashAlgorithm,
-
-    /// files to hash
-    #[argh(positional)]
-    files: Vec<PathBuf>,
-}
+pub mod args;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = argh::from_env();
@@ -101,19 +30,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     for path in args.files {
-        let Ok(mut file) = OpenOptions::new()
-            .read(true)
-            .custom_flags(if cfg!(windows) {
-                // magic: Sequential Scan, potentianlly increasing seq read performance
-                1 << 27
-            } else {
-                0
-            })
-            .open(&path)
-            .inspect_err(|e| {
-                eprintln!("Failed to open {path:?}: {e}");
-            })
-        else {
+        let mut options = OpenOptions::new();
+        let options = options.read(true);
+
+        #[cfg(windows)]
+        let options = options.custom_flags(
+            // magic: Sequential Scan, potentianlly increasing seq read performance
+            1 << 27,
+        );
+        let Ok(mut file) = options.open(&path).inspect_err(|e| {
+            eprintln!("Failed to open {path:?}: {e}");
+        }) else {
             continue;
         };
 
