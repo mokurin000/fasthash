@@ -11,40 +11,45 @@ use std::path::PathBuf;
 
 use argh::FromArgs;
 use hex_simd::AsciiCase;
-use ring::digest::{self, Context};
+use sha2::digest::DynDigest;
+use sha2::{Digest as _, Sha224, Sha256, Sha384, Sha512, Sha512_224, Sha512_256};
 
 #[derive(Debug, Clone, Copy)]
 enum HashAlgorithm {
-    Sha1,
+    Sha224,
     Sha256,
     Sha384,
     Sha512,
+    Sha512_224,
     Sha512_256,
 }
 
 impl HashAlgorithm {
-    pub const fn as_ring(self) -> &'static digest::Algorithm {
-        match self {
-            Self::Sha1 => &digest::SHA1_FOR_LEGACY_USE_ONLY,
-            Self::Sha256 => &digest::SHA256,
-            Self::Sha384 => &digest::SHA384,
-            Self::Sha512 => &digest::SHA512,
-            Self::Sha512_256 => &digest::SHA512_256,
-        }
+    pub fn as_algo(self) -> Box<dyn DynDigest> {
+        let algo: &dyn DynDigest = match self {
+            Self::Sha224 => &Sha224::new(),
+            Self::Sha256 => &Sha256::new(),
+            Self::Sha384 => &Sha384::new(),
+            Self::Sha512 => &Sha512::new(),
+            Self::Sha512_224 => &Sha512_224::new(),
+            Self::Sha512_256 => &Sha512_256::new(),
+        };
+        algo.box_clone()
     }
 }
 
 impl argh::FromArgValue for HashAlgorithm {
     fn from_arg_value(value: &str) -> Result<Self, String> {
         match value {
-            "sha1" => Ok(Self::Sha1),
+            "sha224" => Ok(Self::Sha224),
             "sha256" => Ok(Self::Sha256),
             "sha384" => Ok(Self::Sha384),
             "sha512" => Ok(Self::Sha512),
+            "sha512-224" => Ok(Self::Sha512_224),
             "sha512-256" => Ok(Self::Sha512_256),
             _ => Err(format!(
-                "unknown hash algorithm: {value} \
-(expected: sha1, sha256, sha384, sha512, sha512-256)"
+                "unknown hash algorithm: {value}
+expected: sha224, sha256, sha384, sha512, sha512-224, sha512-256"
             )),
         }
     }
@@ -73,7 +78,7 @@ struct Args {
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = argh::from_env();
 
-    let alg = args.algorithm.as_ring();
+    let alg = args.algorithm.as_algo();
 
     if args.files.is_empty() {
         if let Err(e) = Args::from_args(&["fasthash"], &["--help"]) {
@@ -99,7 +104,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             continue;
         };
 
-        let mut ctx = Context::new(alg);
+        let mut ctx = alg.clone();
         let mut buffer = Vec::with_capacity(args.buf_size as usize);
 
         let mut cursor = BorrowedBuf::from(buffer.spare_capacity_mut());
@@ -121,7 +126,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             break;
         }
 
-        let hex = hex_simd::encode_to_string(ctx.finish(), AsciiCase::Lower);
+        let hex = hex_simd::encode_to_string(ctx.finalize(), AsciiCase::Lower);
 
         println!(
             "{hex} {}",
