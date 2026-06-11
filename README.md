@@ -2,12 +2,33 @@
 
 Fast & lightweight sha2/sha3 series hasher.
 
-## Performance
+## Hardware-Accelerated
 
-Up to 6x faster than `microsoft/uutils` on Windows,
-with hardware acceleration support for aarch64/x86_64/loongarch64/wasm32 by default, riscv needs configuration[^1].
+Hardware acceleration support for aarch64/x86_64/loongarch64/wasm32 are runtime-detected by default, RISC-V requires additional configuration[^1].
 
 [^1]: https://docs.rs/sha2/latest/sha2/#backends
+
+## Benchmark
+
+* File size: 66.9 GiB
+* Storage: Predator GM7000
+* OS: Windows 11 x86_64 22620
+* CPU: Intel Core i7-12700H
+* Hash algorithm: SHA-256
+
+| Command                                                                                                                        | Time  | Notes              |
+| ------------------------------------------------------------------------------------------------------------------------------ | ----- | ------------------ |
+| `fasthash sha256 file`                                                                                                         | 61s   |                    |
+| hashlib* | 68s   | Python 3.13.5      |
+| `openssl sha256 file`                                                                                                          | 78s   | OpenSSL 3.6.0 MSVC |
+| `Get-FileHash file`                                                                                                            | 96.9s | PowerShell 5.1     |
+
+### Python script
+
+```python
+import sys, hashlib
+print(hashlib.file_digest(open(sys.argv[1], "rb"), "sha256").hexdigest(), sys.argv[1])
+```
 
 ## Limitation
 
