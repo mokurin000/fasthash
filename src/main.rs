@@ -1,9 +1,7 @@
 #![feature(core_io_borrowed_buf)]
 #![feature(read_buf)]
 
-use std::borrow::Cow;
 use std::error::Error;
-use std::ffi::OsStr;
 use std::fs::OpenOptions;
 use std::io::{BorrowedBuf, Read};
 
@@ -69,12 +67,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         let hex = hex_simd::encode_to_string(ctx.finalize(), AsciiCase::Lower);
 
-        println!(
-            "{hex} {}",
-            path.file_name()
-                .map(OsStr::to_string_lossy)
-                .unwrap_or(Cow::Borrowed("-"))
-        );
+        println!("{hex} *{}", path.as_os_str().to_string_lossy());
     }
 
     Ok(())
