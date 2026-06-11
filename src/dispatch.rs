@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io::{BorrowedBuf, Read};
+
 use digest::Digest;
 use enum_dispatch::enum_dispatch;
 use sha2::{Sha224, Sha256, Sha384, Sha512, Sha512_224, Sha512_256};
@@ -6,9 +9,31 @@ use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 use crate::args::HashAlgorithm;
 
 #[enum_dispatch(HashAlgo)]
-pub trait HashAlgorithmTrait {
+pub trait HashAlgorithmTrait: Sized {
     fn update(&mut self, data: &[u8]);
     fn finalize_boxed(self) -> Box<[u8]>;
+
+    fn hash_file(
+        mut self,
+        mut file: File,
+        buffer_size: usize,
+    ) -> Result<Box<[u8]>, std::io::Error> {
+        let mut buffer = Vec::with_capacity(buffer_size);
+
+        let mut cursor = BorrowedBuf::from(buffer.spare_capacity_mut());
+
+        loop {
+            if let Err(e) = file.read_buf(cursor.unfilled()) {
+                break Err(e);
+            }
+            if cursor.len() == 0 {
+                break Ok(self.finalize_boxed());
+            }
+
+            self.update(cursor.filled());
+            cursor.clear();
+        }
+    }
 }
 
 #[enum_dispatch]

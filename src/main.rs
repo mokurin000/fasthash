@@ -3,7 +3,6 @@
 
 use std::error::Error;
 use std::fs::OpenOptions;
-use std::io::{BorrowedBuf, Read};
 
 #[cfg(windows)]
 use std::os::windows::fs::OpenOptionsExt as _;
@@ -36,37 +35,23 @@ fn main() -> Result<(), Box<dyn Error>> {
             // magic: Sequential Scan, potentianlly increasing seq read performance
             1 << 27,
         );
-        let Ok(mut file) = options.open(&path).inspect_err(|e| {
+        let Ok(file) = options.open(&path).inspect_err(|e| {
             eprintln!("Failed to open {path:?}: {e}");
         }) else {
             continue;
         };
 
-        let mut ctx = HashAlgo::from(args.algorithm);
-        let mut buffer = Vec::with_capacity(args.buf_size as usize);
-
-        let mut cursor = BorrowedBuf::from(buffer.spare_capacity_mut());
-
-        let file_read_result = loop {
-            if let Err(e) = file.read_buf(cursor.unfilled()) {
-                break Err(e);
+        let algo = HashAlgo::from(args.algorithm);
+        match algo.hash_file(file, args.buf_size as _) {
+            Ok(data) => {
+                let hex = hex_simd::encode_to_string(data, AsciiCase::Lower);
+                println!("{hex} *{}", path.as_os_str().to_string_lossy());
             }
-            if cursor.len() == 0 {
-                break Ok(());
+            Err(e) => {
+                eprintln!("Failed reading {path:?}: {e}");
+                break;
             }
-
-            ctx.update(cursor.filled());
-            cursor.clear();
-        };
-
-        if let Err(e) = file_read_result {
-            eprintln!("Failed reading {path:?}: {e}");
-            break;
         }
-
-        let hex = hex_simd::encode_to_string(ctx.finalize_boxed(), AsciiCase::Lower);
-
-        println!("{hex} *{}", path.as_os_str().to_string_lossy());
     }
 
     Ok(())
