@@ -7,9 +7,11 @@ edition = "2024"
 
 [dependencies]
 argh = { version = "0.1.19", default-features = false, features = ["help"] }
+digest = { version = "0.11.3", features = ["alloc"] }
 hex-simd = "0.8.0"
 parse-size = "1.1.0"
-sha2 = "0.11.0"
+sha2 = { version = "0.11.0", default-features = false }
+sha3 = { version = "0.12.0", default-features = false }
 
 [profile.release]
 lto = true

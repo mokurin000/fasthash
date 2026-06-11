@@ -10,9 +10,10 @@ use std::os::windows::fs::OpenOptionsExt as _;
 use std::path::PathBuf;
 
 use argh::FromArgs;
+use digest::{Digest as _, DynDigest};
 use hex_simd::AsciiCase;
-use sha2::digest::DynDigest;
-use sha2::{Digest as _, Sha224, Sha256, Sha384, Sha512, Sha512_224, Sha512_256};
+use sha2::{Sha224, Sha256, Sha384, Sha512, Sha512_224, Sha512_256};
+use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 
 #[derive(Debug, Clone, Copy)]
 enum HashAlgorithm {
@@ -22,6 +23,10 @@ enum HashAlgorithm {
     Sha512,
     Sha512_224,
     Sha512_256,
+    Sha3_224,
+    Sha3_256,
+    Sha3_384,
+    Sha3_512,
 }
 
 impl HashAlgorithm {
@@ -33,6 +38,10 @@ impl HashAlgorithm {
             Self::Sha512 => &Sha512::new(),
             Self::Sha512_224 => &Sha512_224::new(),
             Self::Sha512_256 => &Sha512_256::new(),
+            Self::Sha3_224 => &Sha3_224::new(),
+            Self::Sha3_256 => &Sha3_256::new(),
+            Self::Sha3_384 => &Sha3_384::new(),
+            Self::Sha3_512 => &Sha3_512::new(),
         };
         algo.box_clone()
     }
@@ -47,9 +56,13 @@ impl argh::FromArgValue for HashAlgorithm {
             "sha512" => Ok(Self::Sha512),
             "sha512-224" => Ok(Self::Sha512_224),
             "sha512-256" => Ok(Self::Sha512_256),
+            "sha3-224" => Ok(Self::Sha3_224),
+            "sha3-256" => Ok(Self::Sha3_256),
+            "sha3-384" => Ok(Self::Sha3_384),
+            "sha3-512" => Ok(Self::Sha3_512),
             _ => Err(format!(
                 "unknown hash algorithm: {value}
-expected: sha224, sha256, sha384, sha512, sha512-224, sha512-256"
+expected: sha224, sha256, sha384, sha512, sha512-224, sha512-256, sha3-224, sha3-256, sha3-384, sha3-512"
             )),
         }
     }
