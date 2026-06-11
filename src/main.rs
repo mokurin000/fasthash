@@ -50,9 +50,17 @@ impl argh::FromArgValue for HashAlgorithm {
     }
 }
 
+fn parse_size(s: &str) -> Result<u64, String> {
+    parse_size::parse_size(s).map_err(|e| e.to_string())
+}
+
 #[derive(FromArgs)]
 /// Calculate file hashes.
 struct Args {
+    /// buffer size, default: 32KiB
+    #[argh(option, from_str_fn(parse_size), default = "32*1024")]
+    buf_size: u64,
+
     /// hash algorithm
     #[argh(positional)]
     algorithm: HashAlgorithm,
@@ -92,7 +100,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         };
 
         let mut ctx = Context::new(alg);
-        let mut buffer = Vec::with_capacity(0x1000000); // 16 MiB
+        let mut buffer = Vec::with_capacity(args.buf_size as usize);
 
         let mut cursor = BorrowedBuf::from(buffer.spare_capacity_mut());
 
