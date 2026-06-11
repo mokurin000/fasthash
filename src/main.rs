@@ -12,14 +12,13 @@ use argh::FromArgs;
 use hex_simd::AsciiCase;
 
 use crate::args::Args;
+use crate::dispatch::{HashAlgo, HashAlgorithmTrait as _};
 
 mod args;
 mod dispatch;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = argh::from_env();
-
-    let alg = args.algorithm.as_algo();
 
     if args.files.is_empty() {
         if let Err(e) = Args::from_args(&["fasthash"], &["--help"]) {
@@ -43,7 +42,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             continue;
         };
 
-        let mut ctx = alg.clone();
+        let mut ctx = HashAlgo::from(args.algorithm);
         let mut buffer = Vec::with_capacity(args.buf_size as usize);
 
         let mut cursor = BorrowedBuf::from(buffer.spare_capacity_mut());
@@ -65,7 +64,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             break;
         }
 
-        let hex = hex_simd::encode_to_string(ctx.finalize(), AsciiCase::Lower);
+        let hex = hex_simd::encode_to_string(ctx.finalize_boxed(), AsciiCase::Lower);
 
         println!("{hex} *{}", path.as_os_str().to_string_lossy());
     }
