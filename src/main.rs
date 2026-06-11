@@ -15,7 +15,8 @@ use hex_simd::AsciiCase;
 
 use crate::args::Args;
 
-pub mod args;
+mod args;
+mod dispatch;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = argh::from_env();

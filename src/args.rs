@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 use argh::FromArgs;
-use fasthash::dispatch::HashAlgorithm;
+
+use crate::dispatch::HashAlgorithm;
 
 fn parse_size(s: &str) -> Result<u64, String> {
     parse_size::parse_size(s).map_err(|e| e.to_string())
