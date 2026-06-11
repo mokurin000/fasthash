@@ -16,12 +16,14 @@ Hardware acceleration support for aarch64/x86_64/loongarch64/wasm32 are runtime-
 * CPU: Intel Core i7-12700H
 * Hash algorithm: SHA-256
 
-| Command                                                                                                                        | Time  | Notes              |
-| ------------------------------------------------------------------------------------------------------------------------------ | ----- | ------------------ |
-| `fasthash sha256 file`                                                                                                         | 61s   |                    |
-| hashlib* | 68s   | Python 3.13.5      |
-| `openssl sha256 file`                                                                                                          | 78s   | OpenSSL 3.6.0 MSVC |
-| `Get-FileHash file`                                                                                                            | 96.9s | PowerShell 5.1     |
+| Command                | Time  | Notes               |
+| ---------------------- | ----- | ------------------- |
+| `fasthash sha256 file` | 61s   |                     |
+| `sha256sum file`       | 67s   | uutils 0.9.0        |
+| hashlib*               | 68s   | Python 3.13.5       |
+| `openssl sha256 file`  | 78s   | OpenSSL 3.6.0 MSVC  |
+| `Get-FileHash file`    | 96.9s | PowerShell 5.1      |
+| `sha256sum file`       | 123s  | Microsoft coreutils |
 
 ### Python script
 
