@@ -9,6 +9,7 @@ use std::io::{BorrowedBuf, Read};
 use std::os::windows::fs::OpenOptionsExt as _;
 
 use argh::FromArgs;
+use digest::DynDigest;
 use hex_simd::AsciiCase;
 
 use crate::args::Args;
@@ -18,8 +19,6 @@ mod dispatch;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = argh::from_env();
-
-    let alg = args.algorithm.as_algo();
 
     if args.files.is_empty() {
         if let Err(e) = Args::from_args(&["fasthash"], &["--help"]) {
@@ -43,7 +42,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             continue;
         };
 
-        let mut ctx = alg.clone();
+        let mut ctx = Box::<dyn DynDigest>::from(args.algorithm);
         let mut buffer = Vec::with_capacity(args.buf_size as usize);
 
         let mut cursor = BorrowedBuf::from(buffer.spare_capacity_mut());
