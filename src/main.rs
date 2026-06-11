@@ -3,13 +3,11 @@
 
 use std::error::Error;
 use std::fs::OpenOptions;
-use std::io::{BorrowedBuf, Read};
 
 #[cfg(windows)]
 use std::os::windows::fs::OpenOptionsExt as _;
 
 use argh::FromArgs;
-use digest::DynDigest;
 use hex_simd::AsciiCase;
 
 use crate::args::Args;
@@ -27,6 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let buffer_size = args.buf_size as _;
     for path in args.files {
         let mut options = OpenOptions::new();
         let options = options.read(true);
@@ -42,31 +41,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             continue;
         };
 
-        let mut ctx = Box::<dyn DynDigest>::from(args.algorithm);
-        let mut buffer = Vec::with_capacity(args.buf_size as usize);
-
-        let mut cursor = BorrowedBuf::from(buffer.spare_capacity_mut());
-
-        let file_read_result = loop {
-            if let Err(e) = file.read_buf(cursor.unfilled()) {
-                break Err(e);
+        let file_read_result = args.algorithm.hash_file(&mut file, buffer_size);
+        match file_read_result {
+            Ok(data) => {
+                let hex = hex_simd::encode_to_string(data, AsciiCase::Lower);
+                println!("{hex} *{}", path.as_os_str().to_string_lossy());
             }
-            if cursor.len() == 0 {
-                break Ok(());
+            Err(e) => {
+                eprintln!("Failed reading {path:?}: {e}");
+                continue;
             }
-
-            ctx.update(cursor.filled());
-            cursor.clear();
-        };
-
-        if let Err(e) = file_read_result {
-            eprintln!("Failed reading {path:?}: {e}");
-            break;
         }
-
-        let hex = hex_simd::encode_to_string(ctx.finalize(), AsciiCase::Lower);
-
-        println!("{hex} *{}", path.as_os_str().to_string_lossy());
     }
 
     Ok(())
