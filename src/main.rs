@@ -7,7 +7,7 @@ use std::fs::OpenOptions;
 #[cfg(windows)]
 use std::os::windows::fs::OpenOptionsExt as _;
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "macos")))]
 use std::os::fd::AsFd;
 
 use argh::FromArgs;

@@ -13,7 +13,7 @@ parse-size = "1.1.0"
 sha2 = { version = "0.11.0", default-features = false }
 sha3 = { version = "0.12.0", default-features = false }
 
-[target.'cfg(unix)'.dependencies]
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
 rustix = { version = "1.1.4", default-features = false, features = [
     "fs",
     "std",
