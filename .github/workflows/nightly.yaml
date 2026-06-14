@@ -27,7 +27,7 @@ jobs:
           - artifact: fasthash-linux-glibc-x86_64
             runner: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
-            zig_target: x86_64-linux-gnu.2.35
+            zig_target: x86_64-linux-gnu.2.31
 
           # Linux musl x64
           - artifact: fasthash-linux-musl-x86_64
