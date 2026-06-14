@@ -2,6 +2,12 @@
 
 Fast & lightweight sha2/sha3 series hasher.
 
+## Download
+
+Pre-release binaries are available on [Github Release](https://github.com/mokurin000/fasthash/releases/tag/nightly).
+
+Notably, for glibc linux x86_64 target, only `glibc>=2.35` are supported, namely Ubuntu 22.04, or Debian 12.
+
 ## Hardware-Accelerated
 
 Hardware acceleration support for aarch64/x86_64/loongarch64/wasm32 are runtime-detected by default, RISC-V requires additional configuration[^1].
