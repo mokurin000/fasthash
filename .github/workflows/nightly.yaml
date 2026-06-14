@@ -120,6 +120,7 @@ jobs:
         if: |
           matrix.zig_target == '' &&
           matrix.target != 'aarch64-linux-android'
+        shell: bash
         run: |
           cargo build \
             --release \
