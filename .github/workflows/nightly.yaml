@@ -62,7 +62,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Install zig
-        uses: mlugg/setup-zig
+        uses: mlugg/setup-zig@v2
 
       # zig only for glibc baseline
       - name: Install zigbuild
