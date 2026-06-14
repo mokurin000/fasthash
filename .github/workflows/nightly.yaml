@@ -88,8 +88,7 @@ jobs:
 
       # rust-lld linker
       - name: Configure rust-lld linker
-        if: matrix.target == 'aarch64-pc-windows-msvc' ||
-          matrix.target == 'aarch64-unknown-linux-musl'
+        if: matrix.target != 'aarch64-linux-android'
         shell: bash
         run: |
           mkdir -p .cargo
