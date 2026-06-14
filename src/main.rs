@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             continue;
         };
 
-        #[cfg(unix)]
+        #[cfg(all(unix, not(target_os = "macos")))]
         if let Err(e) =
             rustix::fs::fadvise(AsFd::as_fd(&file), 0, None, rustix::fs::Advice::Sequential)
         {
