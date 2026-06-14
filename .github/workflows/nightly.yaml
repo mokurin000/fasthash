@@ -61,6 +61,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Install zig
+        uses: mlugg/setup-zig
+
       # zig only for glibc baseline
       - name: Install zigbuild
         if: matrix.zig_target != ''
@@ -91,7 +94,7 @@ jobs:
         run: |
           mkdir -p .cargo
 
-          cat > .cargo/config.toml <<EOF
+          cat >> .cargo/config.toml <<EOF
           [target.aarch64-pc-windows-msvc]
           linker = "rust-lld"
           EOF
