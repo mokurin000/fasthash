@@ -77,13 +77,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y musl-tools
 
-      # Android NDK
-      - name: Setup Android NDK
-        if: matrix.target == 'aarch64-linux-android'
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r28
-
       - name: Install cargo-ndk
         if: matrix.target == 'aarch64-linux-android'
         run: cargo install cargo-ndk
