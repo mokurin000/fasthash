@@ -57,6 +57,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           targets: ${{ matrix.target }}
+          components: rust-src
 
       - uses: Swatinem/rust-cache@v2
 
