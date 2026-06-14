@@ -7,6 +7,9 @@ use std::fs::OpenOptions;
 #[cfg(windows)]
 use std::os::windows::fs::OpenOptionsExt as _;
 
+#[cfg(unix)]
+use std::os::fd::AsFd;
+
 use argh::FromArgs;
 use hex_simd::AsciiCase;
 
@@ -35,10 +38,20 @@ fn main() -> Result<(), Box<dyn Error>> {
             // magic: Sequential Scan, potentianlly increasing seq read performance
             1 << 27,
         );
+
         let Ok(mut file) = options.open(&path).inspect_err(|e| {
             eprintln!("Failed to open {path:?}: {e}");
         }) else {
             continue;
+        };
+
+        #[cfg(unix)]
+        if let Err(e) =
+            rustix::fs::fadvise(AsFd::as_fd(&file), 0, None, rustix::fs::Advice::Sequential)
+        {
+            eprintln!(
+                "Failed to advise sequential read optimizations, may result sub-optimal performance!\n{e}"
+            );
         };
 
         let file_read_result = args.algorithm.hash_file(&mut file, buffer_size);
