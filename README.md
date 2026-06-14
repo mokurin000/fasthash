@@ -6,10 +6,15 @@ Fast & lightweight sha2/sha3 series hasher.
 
 Pre-release binaries are available on [GitHub Releases](https://github.com/mokurin000/fasthash/releases/tag/nightly).
 
-Notably, for glibc Linux x86_64 targets, only `glibc >= 2.31` is supported, namely:
+Notably, for glibc Linux targets, only `glibc >= 2.31` is supported, namely since:
 
-* Ubuntu 20.04+
-* Debian 11+
+- Debian 11
+- Ubuntu 20.04
+- Fedora 32
+- RHEL/Rocky Linux/AlmaLinux 9
+- openSUSE Leap 15.3
+- SUSE Linux Enterprise Server 15 SP3
+- Slackware 15
 
 ## Hardware-Accelerated
 
