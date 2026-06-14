@@ -18,12 +18,6 @@ jobs:
 
       matrix:
         include:
-          # Linux glibc 2.35 ARM64
-          - artifact: fasthash-linux-glibc-aarch64
-            runner: ubuntu-24.04
-            target: aarch64-unknown-linux-gnu
-            zig_target: aarch64-linux-gnu.2.35
-
           # Linux musl ARM64
           - artifact: fasthash-linux-musl-arm64
             runner: ubuntu-24.04
@@ -92,15 +86,16 @@ jobs:
         if: matrix.target == 'aarch64-linux-android'
         run: cargo install cargo-ndk
 
-      # Windows ARM64 linker
-      - name: Configure Windows ARM64 linker
-        if: matrix.target == 'aarch64-pc-windows-msvc'
+      # rust-lld linker
+      - name: Configure rust-lld linker
+        if: matrix.target == 'aarch64-pc-windows-msvc' ||
+          matrix.target == 'aarch64-unknown-linux-musl'
         shell: bash
         run: |
           mkdir -p .cargo
 
           cat >> .cargo/config.toml <<EOF
-          [target.aarch64-pc-windows-msvc]
+          [target.${{ matrix.target }}]
           linker = "rust-lld"
           EOF
 
