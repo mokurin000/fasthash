@@ -36,6 +36,7 @@ Hardware acceleration support for aarch64/x86_64/loongarch64/wasm32 are runtime-
 | `sha256sum file`                 | 67s   | uutils 0.9.0        |
 | hashlib*                         | 68s   | Python 3.13.5       |
 | `openssl sha256 file`            | 78s   | OpenSSL 3.6.0 MSVC  |
+| --                               | 85s   | Nanazip 6.0.1742    |
 | `Get-FileHash file`              | 96.9s | PowerShell 5.1      |
 | `sha256sum file`                 | 123s  | Microsoft coreutils |
 | `open -r file \| hash sha256sum` | 130s  | NuShell 0.112.2     |
