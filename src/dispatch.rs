@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::{BorrowedBuf, Read as _};
 use std::sync::Arc;
-use std::time::Duration;
 
 use crossfire::flavor::Queue;
 use digest::Digest;
@@ -40,7 +39,7 @@ fn hash_file<D: Digest>(
     let io_result = std::thread::spawn(move || {
         loop {
             let Some(mut buffer) = queue_.pop() else {
-                std::thread::sleep(Duration::from_millis(1));
+                std::thread::yield_now();
                 continue;
             };
 

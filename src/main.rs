@@ -21,11 +21,11 @@ mod dispatch;
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = argh::from_env();
 
-    if args.files.is_empty() {
-        if let Err(e) = Args::from_args(&["fasthash"], &["--help"]) {
-            eprintln!("{}", e.output);
-            std::process::exit(1);
-        }
+    if args.files.is_empty()
+        && let Err(e) = Args::from_args(&["fasthash"], &["--help"])
+    {
+        eprintln!("{}", e.output);
+        std::process::exit(1);
     }
 
     let buffer_size = args.buf_size;
