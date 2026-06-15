@@ -19,14 +19,15 @@ pub struct Args {
     #[argh(
         option,
         from_str_fn(parse_size),
-        default = "if cfg!(target_os = \"macos\") { 1024*1024 } else { 256*1024 }"
+        default = "if cfg!(target_os = \"macos\") { 1024*1024 } else { 256*1024 }",
+        short = 'b'
     )]
     pub buf_size: usize,
 
     /// buffer queue length, fasthash will allocate such number of buffers
     ///
     /// specially, when `queue_len = 0`, it's ignored and falling back to 1
-    #[argh(option, default = "8")]
+    #[argh(option, default = "8", short = 'q')]
     pub queue_len: usize,
 
     /// hash algorithm
