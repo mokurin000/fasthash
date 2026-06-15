@@ -12,12 +12,12 @@ fn parse_size(s: &str) -> Result<u64, String> {
 /// Calculate file hashes.
 pub struct Args {
     /// buffer size, default:
-    #[cfg_attr(not(target_os = "macos"), doc = "32 KiB")]
-    #[cfg_attr(target_os = "macos", doc = "1 MiB")]
+    #[cfg_attr(not(target_os = "macos"), doc = " 256 KiB")]
+    #[cfg_attr(target_os = "macos", doc = " 1 MiB")]
     #[argh(
         option,
         from_str_fn(parse_size),
-        default = "if cfg!(target_os = \"macos\") { 1024*1024 } else { 32*1024 }"
+        default = "if cfg!(target_os = \"macos\") { 1024*1024 } else { 256*1024 }"
     )]
     pub buf_size: u64,
 
