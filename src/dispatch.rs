@@ -45,14 +45,10 @@ fn hash_file<D: Digest>(
 
             let mut cursor = BorrowedBuf::from(buffer.spare_capacity_mut());
 
-            match file.read_buf(cursor.unfilled()) {
-                Ok(_) => {}
-                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
-                Err(e) => return Err(e),
-            }
+            file.read_buf(cursor.unfilled())?;
 
             if cursor.len() == 0 {
-                return Ok(());
+                break std::io::Result::Ok(());
             } else {
                 let new_len = cursor.len();
                 unsafe { buffer.set_len(new_len) };
