@@ -24,6 +24,8 @@ pub struct Args {
     pub buf_size: usize,
 
     /// buffer queue length, fasthash will allocate such number of buffers
+    ///
+    /// specially, when `queue_len = 0`, it's ignored and falling back to 1
     #[argh(option, default = "8")]
     pub queue_len: usize,
 
