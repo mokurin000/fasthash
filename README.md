@@ -58,6 +58,7 @@ sha256           84507.57k   301173.92k   894886.69k  1551666.52k  2072279.00k  
 | `openssl sha256 file`            | 78s   | OpenSSL 3.6.0 MSVC  |
 | --                               | 85s   | Nanazip 6.0.1742    |
 | `Get-FileHash file`              | 96.9s | PowerShell 5.1      |
+| `certutil -hashfile file sha256` | 107s  |                     |
 | `sha256sum file`                 | 123s  | Microsoft coreutils |
 | `open -r file \| hash sha256sum` | 130s  | NuShell 0.112.2     |
 
