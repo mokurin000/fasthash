@@ -4,8 +4,10 @@ use argh::FromArgs;
 
 use crate::dispatch::HashAlgorithm;
 
-fn parse_size(s: &str) -> Result<u64, String> {
-    parse_size::parse_size(s).map_err(|e| e.to_string())
+fn parse_size(s: &str) -> Result<usize, String> {
+    parse_size::parse_size(s)
+        .map(|n| n as usize)
+        .map_err(|e| e.to_string())
 }
 
 #[derive(FromArgs)]
@@ -19,7 +21,11 @@ pub struct Args {
         from_str_fn(parse_size),
         default = "if cfg!(target_os = \"macos\") { 1024*1024 } else { 256*1024 }"
     )]
-    pub buf_size: u64,
+    pub buf_size: usize,
+
+    /// buffer queue length, fasthash will allocate such number of buffers
+    #[argh(option, default = "8")]
+    pub queue_len: usize,
 
     /// hash algorithm
     #[argh(positional)]

@@ -7,6 +7,7 @@ edition = "2024"
 
 [dependencies]
 argh = { version = "0.1.19", default-features = false, features = ["help"] }
+crossfire = "3.1.16"
 digest = { version = "0.11.3", features = ["alloc"] }
 hex-simd = "0.8.0"
 parse-size = "1.1.0"

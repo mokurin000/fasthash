@@ -28,7 +28,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let buffer_size = args.buf_size as _;
+    let buffer_size = args.buf_size;
+    let queue_len = args.queue_len;
+
     for path in args.files {
         let mut options = OpenOptions::new();
         let options = options.read(true);
@@ -39,7 +41,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             1 << 27,
         );
 
-        let Ok(mut file) = options.open(&path).inspect_err(|e| {
+        let Ok(file) = options.open(&path).inspect_err(|e| {
             eprintln!("Failed to open {path:?}: {e}");
         }) else {
             continue;
@@ -54,7 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             );
         };
 
-        let file_read_result = args.algorithm.hash_file(&mut file, buffer_size);
+        let file_read_result = args.algorithm.hash_file(file, buffer_size, queue_len);
         match file_read_result {
             Ok(data) => {
                 let hex = hex_simd::encode_to_string(data, AsciiCase::Lower);
