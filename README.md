@@ -32,7 +32,7 @@ Hardware acceleration support for aarch64/x86_64/loongarch64/wasm32 are runtime-
 
 | Command                          | Time  | Notes               |
 | -------------------------------- | ----- | ------------------- |
-| `fasthash sha256 file`           | 61s   |                     |
+| `fasthash sha256 file`           | 52s   | queue=8, buf=256K   |
 | `sha256sum file`                 | 67s   | uutils 0.9.0        |
 | hashlib*                         | 68s   | Python 3.13.5       |
 | `openssl sha256 file`            | 78s   | OpenSSL 3.6.0 MSVC  |
