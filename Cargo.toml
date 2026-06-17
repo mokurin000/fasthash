@@ -26,3 +26,5 @@ strip = true
 panic = "immediate-abort"
 opt-level = 3
 codegen-units = 1
+split-debuginfo = "packed"
+debug = "full"
