@@ -3,30 +3,23 @@ use std::io::{BorrowedBuf, Read as _};
 use std::sync::Arc;
 
 use crossfire::flavor::Queue;
-use digest::Digest;
-use sha2::{Sha224, Sha256, Sha384, Sha512, Sha512_224, Sha512_256};
-use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
+use ring::digest::{Algorithm, Context, SHA256, SHA384, SHA512, SHA512_256};
 
 #[derive(Debug, Clone, Copy)]
 pub enum HashAlgorithm {
-    Sha224,
     Sha256,
     Sha384,
     Sha512,
-    Sha512_224,
     Sha512_256,
-    Sha3_224,
-    Sha3_256,
-    Sha3_384,
-    Sha3_512,
 }
 
-fn hash_file<D: Digest>(
+fn hash_file(
+    algorithm: &'static Algorithm,
     mut file: File,
     buffer_size: usize,
     queue_len: usize,
 ) -> std::io::Result<Box<[u8]>> {
-    let mut ctx = D::new();
+    let mut ctx = Context::new(algorithm);
 
     let queue = Arc::new(crossfire::spsc::Array::new(queue_len));
     let (readed_tx, readed_rx) = crossfire::spsc::bounded_blocking(queue_len);
@@ -65,7 +58,7 @@ fn hash_file<D: Digest>(
 
     io_result.join().expect("file io thread panicked")?;
 
-    Ok(ctx.finalize().to_vec().into_boxed_slice())
+    Ok(ctx.finish().as_ref().to_vec().into_boxed_slice())
 }
 
 impl HashAlgorithm {
@@ -79,19 +72,13 @@ impl HashAlgorithm {
         queue_len: usize,
     ) -> std::io::Result<Box<[u8]>> {
         // Compute hash
-        let hash = match self {
-            HashAlgorithm::Sha224 => hash_file::<Sha224>,
-            HashAlgorithm::Sha256 => hash_file::<Sha256>,
-            HashAlgorithm::Sha384 => hash_file::<Sha384>,
-            HashAlgorithm::Sha512 => hash_file::<Sha512>,
-            HashAlgorithm::Sha512_224 => hash_file::<Sha512_224>,
-            HashAlgorithm::Sha512_256 => hash_file::<Sha512_256>,
-            HashAlgorithm::Sha3_224 => hash_file::<Sha3_224>,
-            HashAlgorithm::Sha3_256 => hash_file::<Sha3_256>,
-            HashAlgorithm::Sha3_384 => hash_file::<Sha3_384>,
-            HashAlgorithm::Sha3_512 => hash_file::<Sha3_512>,
+        let algorithm = match self {
+            HashAlgorithm::Sha256 => &SHA256,
+            HashAlgorithm::Sha384 => &SHA384,
+            HashAlgorithm::Sha512 => &SHA512,
+            HashAlgorithm::Sha512_256 => &SHA512_256,
         };
 
-        hash(file, buffer_size, queue_len)
+        hash_file(algorithm, file, buffer_size, queue_len)
     }
 }
